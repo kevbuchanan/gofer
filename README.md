@@ -2,12 +2,20 @@
 
 Download progress bar in Go.
 
+## Install
+
+```
+$ make install
+```
+
 ## Usage
 
 ```
-$ go install
+$ gofer <url> <destination>
 ```
 
+## Test
+
 ```
-$ gofer <url> <destination>
+$ make test
 ```
