@@ -12,8 +12,8 @@ type Download struct {
 	Source *io.ReadCloser
 	Length int64
 	Read   int64
-	Reads  chan int64
-	Errors chan error
+	Reads  chan<- int64
+	Errors chan<- error
 }
 
 func maxRead(leftToRead, defaultRead int64) int64 {
@@ -24,9 +24,13 @@ func maxRead(leftToRead, defaultRead int64) int64 {
 	}
 }
 
-func (download *Download) Start() {
+func (download Download) Start() {
 	for {
-		toRead := maxRead(download.Length-download.Read, 1000)
+		leftToRead := download.Length - download.Read
+		if leftToRead == 0 {
+			break
+		}
+		toRead := maxRead(leftToRead, 1000)
 		nRead, err := io.CopyN(download.Target, *download.Source, toRead)
 		if err != nil {
 			download.Errors <- err
@@ -45,20 +49,27 @@ func getSourceReader(source string) (*io.ReadCloser, int64, error) {
 	return &resp.Body, resp.ContentLength, nil
 }
 
-func NewDownload(source string, dest string) Download {
-	reads := make(chan int64, 10)
-	errors := make(chan error, 10)
-
-	sourceReader, length, _ := getSourceReader(source)
-	destFile, _ := os.Create(dest)
+func NewDownload(setup Setup) Download {
+	sourceReader, length, sourceError := getSourceReader(setup.FileUrl)
+	if sourceError != nil {
+		setup.Errors <- sourceError
+	}
+	destFile, fileError := os.OpenFile(
+		setup.Destination,
+		os.O_CREATE|os.O_EXCL|os.O_WRONLY,
+		os.FileMode(0666),
+	)
+	if fileError != nil {
+		setup.Errors <- fileError
+	}
 
 	download := Download{
 		Target: destFile,
 		Source: sourceReader,
 		Length: length,
 		Read:   0,
-		Reads:  reads,
-		Errors: errors,
+		Reads:  setup.Reads,
+		Errors: setup.Errors,
 	}
 
 	return download

@@ -1,38 +1,40 @@
 package gofer
 
 type Progress struct {
-	Length  int64
-	Read    int64
-	Percent int
-	Reads   <-chan int64
-	Errors  <-chan error
-	Status  chan int
+	Length int64
+	Reads  <-chan int64
+	Errors <-chan error
+	Status chan int
 }
 
-func (progress *Progress) Update() {
+func (progress Progress) Update() {
+	readSoFar := int64(0)
 	for nRead := range progress.Reads {
-		progress.Read += nRead
-		percent := int(progress.Read * 100 / progress.Length)
+		readSoFar += nRead
+		percent := int(readSoFar * 100 / progress.Length)
 		progress.Status <- percent
 	}
 }
 
-func (progress *Progress) Watch() {
-	for percent := range progress.Status {
-		Display(percent)
-		if percent == 100 {
-			DisplayDone()
-			break
+func (progress Progress) Watch() {
+	for {
+		select {
+		case percent := <-progress.Status:
+			Display(percent)
+			if percent == 100 {
+				DisplayDone()
+			}
+		case downloadError := <-progress.Errors:
+			DisplayError(downloadError)
 		}
 	}
 }
 
-func NewProgress(download *Download) Progress {
+func NewProgress(setup Setup, download Download) Progress {
 	progress := Progress{
 		Length: download.Length,
-		Read:   0,
-		Reads:  download.Reads,
-		Errors: download.Errors,
+		Reads:  setup.Reads,
+		Errors: setup.Errors,
 		Status: make(chan int, 10),
 	}
 

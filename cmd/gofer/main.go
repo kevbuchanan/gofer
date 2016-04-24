@@ -6,10 +6,10 @@ import (
 )
 
 func main() {
-	fileUrl, dest := gofer.Setup(os.Args)
+	setup := gofer.NewSetup(os.Args)
 
-	download := gofer.NewDownload(fileUrl, dest)
-	progress := gofer.NewProgress(&download)
+	download := gofer.NewDownload(setup)
+	progress := gofer.NewProgress(setup, download)
 
 	go progress.Update()
 	go download.Start()

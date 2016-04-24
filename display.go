@@ -2,6 +2,7 @@ package gofer
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -19,4 +20,10 @@ func Display(percentDone int) {
 func DisplayDone() {
 	fmt.Print("\033[?25h") // Show cursor
 	fmt.Println()
+	os.Exit(0)
+}
+
+func DisplayError(e error) {
+	fmt.Println(e)
+	os.Exit(1)
 }
