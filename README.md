@@ -1,6 +1,7 @@
 # Gofer
 
 Download progress bar in Go.
+
 ![demo](https://cloud.githubusercontent.com/assets/4039018/14772175/a96ecd40-0a60-11e6-8fda-56465b754f1f.gif)
 
 ## Clone
