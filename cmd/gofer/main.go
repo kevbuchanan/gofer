@@ -10,6 +10,7 @@ func main() {
 
 	download := gofer.NewDownload(setup)
 	progress := gofer.NewProgress(setup, download)
+	defer progress.Display.Done()
 
 	go progress.Update()
 	go download.Start()

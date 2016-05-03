@@ -1,10 +1,11 @@
 package gofer
 
 type Progress struct {
-	Length int64
-	Reads  <-chan int64
-	Errors <-chan error
-	Status chan int
+	Length  int64
+	Reads   <-chan int64
+	Errors  <-chan error
+	Status  chan int
+	Display Display
 }
 
 func (progress Progress) Update() {
@@ -20,22 +21,23 @@ func (progress Progress) Watch() {
 	for {
 		select {
 		case percent := <-progress.Status:
-			Display(percent)
+			progress.Display.Status(percent)
 			if percent == 100 {
-				DisplayDone()
+				progress.Display.Done()
 			}
 		case downloadError := <-progress.Errors:
-			DisplayError(downloadError)
+			progress.Display.Error(downloadError)
 		}
 	}
 }
 
 func NewProgress(setup Setup, download Download) Progress {
 	progress := Progress{
-		Length: download.Length,
-		Reads:  setup.Reads,
-		Errors: setup.Errors,
-		Status: make(chan int, 10),
+		Length:  download.Length,
+		Reads:   setup.Reads,
+		Errors:  setup.Errors,
+		Status:  make(chan int, 10),
+		Display: NewDisplay(),
 	}
 
 	return progress
