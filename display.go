@@ -29,8 +29,12 @@ func (display Display) Status(percentDone int) {
 	fmt.Printf("(%d%%)", percentDone)
 }
 
-func (display Display) Done() {
+func (display Display) Reset() {
 	showCursor()
+}
+
+func (display Display) Done() {
+	display.Reset()
 	fmt.Println()
 	os.Exit(0)
 }

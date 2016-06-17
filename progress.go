@@ -12,8 +12,12 @@ func (progress Progress) Update() {
 	readSoFar := int64(0)
 	for nRead := range progress.Reads {
 		readSoFar += nRead
-		percent := int(readSoFar * 100 / progress.Length)
+		percent := int(float64(readSoFar) * 100 / float64(progress.Length))
 		progress.Status <- percent
+		if nRead == -1 {
+			progress.Status <- -1
+			break
+		}
 	}
 }
 
